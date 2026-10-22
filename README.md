@@ -85,13 +85,17 @@ Se recomienda que cada actividad contenga sus respectivos archivos, códigos fue
 ## 👥 Equipo de trabajo
 
 **Grupo 7**
-Integrantes: Valeria Agila
-             Roy Gordillo
-             Pilar Naranjo
-             Alison Tapia
-             José Valencia
-Asignatura: Estructura de Datos  
-Institución: Universidad Nacional de Loja (UNL)
+
+**Integrantes:** 
+Valeria Agila,
+Roy Gordillo,
+Pilar Naranjo,
+Alison Tapia,
+José Valencia
+
+**Asignatura:** Estructura de Datos  
+
+**Institución:** Universidad Nacional de Loja (UNL)
 
 ---
 
