@@ -45,3 +45,5 @@ const multiplicador = (timeArray / timeList).toFixed(1);
 console.log(`\n[Auditoría Verde] La lista enlazada es ${multiplicador} veces más rápida.`);
 
 console.log(`Ahorro directo de ciclos de CPU y consumo eléctrico en el servidor.`);
+
+listaHistorial.imprimirPrimeros(5);

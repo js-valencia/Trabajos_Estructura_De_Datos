@@ -25,6 +25,18 @@ class ListaSatelital {
         this.tamaño++;
     }
 
+    // Método para imprimir la lista (Recorrido secuencial O(n))
+    imprimirPrimeros(limite) {
+        let actual = this.cabeza;
+        let contador = 0;
+        let salida = "";
+        while (actual && contador < limite) {
+            salida += `[ID: ${actual.dato.id}] -> `;
+            actual = actual.siguiente;
+            contador++;
+        }
+        console.log(salida + "NULL");
+    }
 
 }
 
