@@ -151,11 +151,13 @@ function modoInteractivo() {
  
   rl.on('close', () => console.log('\nHasta luego.'));
 }
- 
-if (process.argv.includes('--interactivo')) {
-  modoInteractivo();
-} else {
-  demostracion();
+// Solo se ejecuta si el archivo se corre directamente (no cuando otro módulo lo importa)
+if (require.main === module) {
+  if (process.argv.includes('--interactivo')) {
+    modoInteractivo();
+  } else {
+    demostracion();
+  }
 }
  
 module.exports = historial;
