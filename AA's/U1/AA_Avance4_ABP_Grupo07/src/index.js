@@ -75,7 +75,10 @@ function modoInteractivo() {
     input: process.stdin,
     output: process.stdout,
   });
-  let siguienteId = 200;
+  let siguienteId = 101;
+  historial.recorrer((vista) => {
+    siguienteId = Math.max(siguienteId, vista.id + 1);
+  });
   let esperandoNombre = false; // true cuando se está pidiendo el nombre de una vista nueva
  
   const menu = [
@@ -125,9 +128,10 @@ function modoInteractivo() {
         mostrarActual(historial);
         break;
       case 'n':
-        console.log('Escribe el nombre de la nueva vista:');
+        console.log('Ingresa el nombre de la nueva vista:');
         esperandoNombre = true;
-        rl.setPrompt('nombre> ');
+        rl.setPrompt('Nombre de la vista: ');
+        rl.prompt();
         break;
       case 'v':
         mostrarActual(historial);
