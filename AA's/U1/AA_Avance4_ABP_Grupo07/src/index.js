@@ -9,26 +9,28 @@ const c = {
   verde: '\x1b[32m',
   rojo: '\x1b[31m',
   amarillo: '\x1b[33m',
-  cian: '\x1b[36m',
+  cian: '\x1b[36m', // Se corrigió c.cyan por c.cian
 };
+
 const pintar = (color, texto) => `${color}${texto}${c.reset}`;
-const ok = (msg) => console.log(pintar(c.verde, `  ✔ ${msg}`));
-const aviso = (msg) => console.log(pintar(c.amarillo, `  ⚠ ${msg}`));
-const error = (msg) => console.log(pintar(c.rojo, `  ✖ ${msg}`));
- 
-// Historial de navegación del proyecto ABP
-const historial = new ListaDobleNavegacion();
- 
-historial.insertar({ id: 101, accion: 'Inicio - Terminal Reina del Cisne' });
-historial.insertar({ id: 102, accion: 'Buscar ruta Loja → Cuenca' });
-historial.insertar({ id: 103, accion: 'Ver horarios Loja → Catamayo' });
-historial.insertar({ id: 104, accion: 'Comparar conexiones Loja → Zamora' });
+const ok = (msg) => console.log(pintar(c.verde, `   ✔ ${msg}`));
+const aviso = (msg) => console.log(pintar(c.amarillo, `   ⚠ ${msg}`));
+const error = (msg) => console.log(pintar(c.rojo, `   ✖ ${msg}`));
+
+// Carga inicial de datos de prueba
+function cargarDatosIniciales(lista) {
+  lista.limpiarHistorial();
+  lista.insertar({ id: 101, accion: 'Inicio - Terminal Reina del Cisne' });
+  lista.insertar({ id: 102, accion: 'Buscar ruta Loja → Cuenca' });
+  lista.insertar({ id: 103, accion: 'Ver horarios Loja → Catamayo' });
+  lista.insertar({ id: 104, accion: 'Comparar conexiones Loja → Zamora' });
+}
 
 function mostrarActual(lista) {
   const actual = lista.obtenerActual();
   console.log(
     actual
-      ? `${pintar(c.cyan, 'Vista actual:')} [${actual.id}] ${pintar(c.negrita, actual.accion)} ` +
+      ? `${pintar(c.cian, 'Vista actual:')} [${actual.id}] ${pintar(c.negrita, actual.accion)} ` +
         pintar(c.tenue, `(total: ${lista.longitud})`)
       : pintar(c.amarillo, 'La lista está vacía.')
   );
@@ -37,28 +39,28 @@ function mostrarActual(lista) {
 function mostrarLista(lista) {
   console.log(pintar(c.negrita, '\nHistorial de navegación'));
   if (lista.longitud === 0) {
-    console.log('  (vacío)');
+    console.log('   (vacío)');
     return;
   }
   lista.recorrer((vista, esActual, posicion) => {
     const linea = `${posicion}. [${vista.id}] ${vista.accion}`;
-    console.log(esActual ? pintar(c.verde, `  ▶ ${linea}   ◀ aquí estás`) : `    ${linea}`);
+    console.log(esActual ? pintar(c.verde, `   ▶ ${linea}   ◀ aquí estás`) : `     ${linea}`);
   });
 }
 
 function mostrarListaInversa(lista) {
   console.log(pintar(c.negrita, '\nHistorial de navegación (orden inverso)'));
   if (lista.longitud === 0) {
-    console.log('  (vacío)');
+    console.log('   (vacío)');
     return;
   }
   lista.recorrerInverso((vista, esActual, posicion) => {
     const linea = `${posicion}. [${vista.id}] ${vista.accion}`;
-    console.log(esActual ? pintar(c.verde, `  ▶ ${linea}   ◀ aquí estás`) : `    ${linea}`);
+    console.log(esActual ? pintar(c.verde, `   ▶ ${linea}   ◀ aquí estás`) : `     ${linea}`);
   });
 }
 
-function demostracionNuevas() {
+function demostracionNuevas(historial) {
   console.log('\n=== Nuevas funcionalidades ===');
 
   console.log('\n--- Ir a una posición (irAPosicion) ---');
@@ -80,22 +82,22 @@ function demostracionNuevas() {
   mostrarActual(historial);
 }
 
-function demostracion() {
+function demostracion(historial) {
   console.log('=== Demostración de navegación bidireccional ===\n');
   mostrarActual(historial);
- 
+
   console.log('\n--- Avanzar ---');
   console.log(historial.avanzar());
   console.log(historial.avanzar());
   console.log(historial.avanzar());
   console.log('Al final de la lista:', historial.avanzar());
- 
+
   console.log('\n--- Retroceder ---');
   console.log(historial.retroceder());
   console.log(historial.retroceder());
   console.log(historial.retroceder());
   console.log('Al inicio de la lista:', historial.retroceder());
- 
+
   console.log('\n--- Eliminar el elemento actual ---');
   historial.avanzar(); // cursor en 102
   console.log('Eliminando:', historial.obtenerActual());
@@ -103,103 +105,119 @@ function demostracion() {
   mostrarActual(historial);
 }
 
-function modoInteractivo() {
+function modoInteractivo(historial) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
+
   let siguienteId = 101;
   historial.recorrer((vista) => {
     siguienteId = Math.max(siguienteId, vista.id + 1);
   });
-  let esperandoNombre = false;
+
   let pendiente = null;
- 
+
   const menu = [
     '\n=== Navegador interactivo ===',
-    ' a -> avanzar',
-    ' r -> retroceder',
-    ' e -> eliminar la vista actual',
-    ' n -> agregar una nueva vista al final',
-    ' v -> ver la vista actual',
-    ' i -> ir al inicio',
-    ' f -> ir al final',
-    ' l -> listar todo el historial',
-    ' g -> ir a una posición concreta',
-    ' b -> buscar vistas por texto',
-    ' m -> insertar una vista después de la actual',
-    ' o -> listar el historial en orden inverso',
-    ' x -> vaciar el historial completo (limpiarHistorial)', 
-    ' s -> salir',
+    ' a -> avanzar                          r -> retroceder',
+    ' e -> eliminar la vista actual         v -> ver la vista actual',
+    ' i -> ir al inicio                     f -> ir al final',
+    ' l -> listar todo el historial         o -> listar en orden inverso',
+    ' n -> agregar nueva vista al final     m -> insertar después de la actual',
+    ' g -> ir a posición concreta           b -> buscar por texto',
+    ' x -> vaciar el historial              s -> salir',
   ].join('\n');
- 
+
   console.log(menu);
   mostrarActual(historial);
   rl.setPrompt('> ');
   rl.prompt();
- 
+
   rl.on('line', (linea) => {
+    const input = linea.trim();
+
     if (pendiente) {
       const tipo = pendiente;
       pendiente = null;
-      const texto = linea.trim();
+
       if (tipo === 'posicion') {
-        const resultado = historial.irAPosicion(Number(texto));
-        if (resultado === null) error(`Posición inválida (usa un número entre 1 y ${historial.longitud}).`);
-        mostrarActual(historial);
-      } else if (tipo === 'buscar') {
-        const encontrados = historial.buscarPorAccion(texto);
-        if (encontrados.length === 0) {
-          aviso('Sin coincidencias.');
+        const num = Number(input);
+        if (isNaN(num) || input === '') {
+          error('Por favor ingresa un número válido.');
         } else {
-          encontrados.forEach(({ posicion, dato }) => console.log(`  ${posicion}. [${dato.id}] ${dato.accion}`));
+          const resultado = historial.irAPosicion(num);
+          if (resultado === null) {
+            error(`Posición inválida (usa un número entre 1 y ${historial.longitud}).`);
+          } else {
+            mostrarActual(historial);
+          }
+        }
+      } else if (tipo === 'buscar') {
+        if (!input) {
+          aviso('Búsqueda cancelada (texto vacío).');
+        } else {
+          const encontrados = historial.buscarPorAccion(input);
+          if (encontrados.length === 0) {
+            aviso('Sin coincidencias.');
+          } else {
+            console.log(pintar(c.negrita, '\nCoincidencias encontradas:'));
+            encontrados.forEach(({ posicion, dato }) =>
+              console.log(`  ${posicion}. [${dato.id}] ${dato.accion}`)
+            );
+          }
         }
       } else if (tipo === 'insertarDespues') {
-        if (texto) {
-          historial.insertarDespuesDelActual({ id: siguienteId, accion: texto });
-          siguienteId++;
+        if (input) {
+          historial.insertarDespuesDelActual({ id: siguienteId++, accion: input });
           ok(`Vista insertada después de la actual (total: ${historial.longitud}).`);
         } else {
           error('El nombre no puede estar vacío.');
         }
+      } else if (tipo === 'agregarFinal') {
+        if (input) {
+          historial.insertar({ id: siguienteId++, accion: input });
+          ok(`Vista agregada al final (total: ${historial.longitud}).`);
+        } else {
+          error('El nombre no puede estar vacío.');
+        }
+      } else if (tipo === 'confirmarLimpiar') {
+        if (input.toLowerCase() === 's') {
+          historial.limpiarHistorial();
+          ok('Historial vaciado por completo.');
+          mostrarActual(historial);
+        } else {
+          aviso('Operación cancelada.');
+        }
       }
+
       rl.setPrompt('> ');
       rl.prompt();
       return;
     }
-    if (esperandoNombre) {
-      esperandoNombre = false;
-      const nombre = linea.trim();
-      if (nombre) {
-        historial.insertar({ id: siguienteId, accion: nombre });
-        siguienteId++;
-        ok(`Vista agregó al final (total: ${historial.longitud}).`);
-      } else {
-        error('El nombre no puede estar vacío.');
-      }
-      rl.setPrompt('> ');
-      rl.prompt();
-      return;
-    }
-    switch (linea.trim().toLowerCase()) {
+
+    switch (input.toLowerCase()) {
       case 'a':
-        if (historial.avanzar() === null) console.log('Ya estás en la última vista.');
+        if (historial.avanzar() === null) aviso('Ya estás en la última vista.');
         mostrarActual(historial);
         break;
       case 'r':
-        if (historial.retroceder() === null) console.log('Ya estás en la primera vista.');
+        if (historial.retroceder() === null) aviso('Ya estás en la primera vista.');
         mostrarActual(historial);
         break;
       case 'e':
-        console.log(historial.eliminarActual() ? 'Vista eliminada.' : 'No hay nada que eliminar.');
+        if (historial.eliminarActual()) {
+          ok('Vista eliminada.');
+        } else {
+          aviso('No hay nada que eliminar.');
+        }
         mostrarActual(historial);
         break;
       case 'n':
-        console.log('Ingresa el nombre de la nueva vista:');
-        esperandoNombre = true;
-        rl.setPrompt('Nombre de la vista: ');
+        pendiente = 'agregarFinal';
+        rl.setPrompt('Nombre de la nueva vista: ');
         rl.prompt();
-        break;
+        return;
       case 'v':
         mostrarActual(historial);
         break;
@@ -215,6 +233,10 @@ function modoInteractivo() {
         mostrarLista(historial);
         break;
       case 'g':
+        if (historial.longitud === 0) {
+          aviso('La lista está vacía.');
+          break;
+        }
         pendiente = 'posicion';
         rl.setPrompt(`Posición (1-${historial.longitud}): `);
         rl.prompt();
@@ -225,6 +247,10 @@ function modoInteractivo() {
         rl.prompt();
         return;
       case 'm':
+        if (historial.longitud === 0) {
+          aviso('La lista está vacía, usa "n" para agregar al inicio.');
+          break;
+        }
         pendiente = 'insertarDespues';
         rl.setPrompt('Nombre de la vista: ');
         rl.prompt();
@@ -232,28 +258,36 @@ function modoInteractivo() {
       case 'o':
         mostrarListaInversa(historial);
         break;
-      case 'x': 
-        historial.limpiarHistorial();
-        ok('Historial vaciado por completo. Referencias y memoria liberadas.');
-        mostrarActual(historial);
-        break;
+      case 'x':
+        if (historial.longitud === 0) {
+          aviso('El historial ya está vacío.');
+          break;
+        }
+        pendiente = 'confirmarLimpiar';
+        rl.setPrompt('¿Estás seguro de vaciar todo el historial? (s/n): ');
+        rl.prompt();
+        return;
       case 's':
         rl.close();
         return;
       default:
-        console.log('Opción no válida.');
+        error('Opción no válida. Escribe una opción del menú.');
     }
     rl.prompt();
   });
- 
+
   rl.on('close', () => console.log('\nHasta luego.'));
 }
 
 if (require.main === module) {
+  const historial = new ListaDobleNavegacion();
+  cargarDatosIniciales(historial);
+
   if (process.argv.includes('--interactivo')) {
-    modoInteractivo();
+    modoInteractivo(historial);
   } else {
-    demostracion();
-    demostracionNuevas();
+    demostracion(historial);
+    cargarDatosIniciales(historial); // Recargar datos limpios antes de la siguiente demo
+    demostracionNuevas(historial);
   }
 }
