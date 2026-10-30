@@ -2,6 +2,7 @@ const NodoDoble = require('./NodoDoble');
 
 /**
  * Estructura de datos dinámica para la gestión de navegación bidireccional.
+ * Desarrollado y optimizado colaborativamente - Grupo 07
  */
 class ListaDobleNavegacion {
     constructor() {
@@ -31,13 +32,14 @@ class ListaDobleNavegacion {
 
         this.longitud++;
         return nuevoNodo;
-  }
+    }
 
     /**
     * Desplaza el cursor activo hacia el siguiente nodo. Complejidad: O(1)
     * @returns {Object|null} El dato del nuevo nodo activo o null si alcanza el final.
     */
     avanzar() {
+        // Aporte Técnico Grupo 07: Complejidad O(1). La transición es directa usando el puntero 'siguiente'
         if (this.actual && this.actual.siguiente) {
             this.actual = this.actual.siguiente;
             return this.actual.dato;
@@ -50,6 +52,7 @@ class ListaDobleNavegacion {
     * @returns {Object|null} El dato del nuevo nodo activo o null si alcanza el inicio.
     */
     retroceder() {
+        // Aporte Técnico Grupo 07: Complejidad O(1). Navegación reversa inmediata gracias al puntero 'anterior'
         if (this.actual && this.actual.anterior) {
             this.actual = this.actual.anterior;
             return this.actual.dato;
@@ -91,23 +94,25 @@ class ListaDobleNavegacion {
             this.actual = nodoAEliminar.anterior;
         }
 
-        // Limpieza explícita de referencias (Garbage Collection Helper)
+        // Aporte Técnico Grupo 07: Garbage Collection Helper exhaustivo.
+        // Se desvincula también el dato interno para asegurar la liberación en el Memory Heap.
         nodoAEliminar.siguiente = null;
         nodoAEliminar.anterior = null;
+        nodoAEliminar.dato = null; 
 
         this.longitud--;
         return true;
-  }
+    }
 
-  /**
-   * Mueve el cursor al primer nodo usando el puntero cabeza. Complejidad: O(1)
-   * @returns {Object|null} El dato del primer nodo o null si la lista está vacía.
-   */
-  irAlInicio() {
-    if (!this.cabeza) return null;
-    this.actual = this.cabeza;
-    return this.actual.dato;
-  }
+    /**
+    * Mueve el cursor al primer nodo usando el puntero cabeza. Complejidad: O(1)
+    * @returns {Object|null} El dato del primer nodo o null si la lista está vacía.
+    */
+    irAlInicio() {
+        if (!this.cabeza) return null;
+        this.actual = this.cabeza;
+        return this.actual.dato;
+    }
 
     /**
      * Mueve el cursor al último nodo usando el puntero cola. Complejidad: O(1)
@@ -120,8 +125,7 @@ class ListaDobleNavegacion {
     }
 
     /**
-     * Recorre la lista de cabeza a cola sin modificarla ni imprimir nada
-     * (la presentación queda en index.js). Complejidad: O(n)
+     * Recorre la lista de cabeza a cola sin modificarla ni imprimir nada. Complejidad: O(n)
      * @param {function(Object, boolean, number): void} callback Recibe (dato, esActual, posicion).
      */
     recorrer(callback) {
@@ -133,7 +137,6 @@ class ListaDobleNavegacion {
             posicion++;
         }
     }
-
 }
 
 module.exports = ListaDobleNavegacion;
