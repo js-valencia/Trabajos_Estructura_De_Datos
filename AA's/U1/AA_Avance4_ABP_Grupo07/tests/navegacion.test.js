@@ -1,3 +1,4 @@
+// Pruebas unitarias validadas y ejecutadas por el Grupo 07 
 const { test, describe, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 const ListaDobleNavegacion = require('../src/models/ListaDobleNavegacion');
