@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "interactivo": "node src/index.js --interactivo",
+    "extra-tests": "node --test tests/extra.test.js",
     "test": "node --test tests/navegacion.test.js"
   },
   "engines": {
