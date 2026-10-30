@@ -1,5 +1,21 @@
 const readline = require('node:readline');
 const ListaDobleNavegacion = require('./models/ListaDobleNavegacion');
+
+
+// Colores ANSI para la consola (sin librerías externas)
+const c = {
+  reset: '\x1b[0m',
+  negrita: '\x1b[1m',
+  tenue: '\x1b[2m',
+  verde: '\x1b[32m',
+  rojo: '\x1b[31m',
+  amarillo: '\x1b[33m',
+  cian: '\x1b[36m',
+};
+const pintar = (color, texto) => `${color}${texto}${c.reset}`;
+const ok = (msg) => console.log(pintar(c.verde, `  ✔ ${msg}`));
+const aviso = (msg) => console.log(pintar(c.amarillo, `  ⚠ ${msg}`));
+const error = (msg) => console.log(pintar(c.rojo, `  ✖ ${msg}`));
  
 // Historial de navegación del proyecto ABP
 const historial = new ListaDobleNavegacion();
@@ -12,8 +28,9 @@ function mostrarActual(lista) {
   const actual = lista.obtenerActual();
   console.log(
     actual
-      ? `Vista actual: [${actual.id}] ${actual.accion} (total: ${lista.longitud})`
-      : 'La lista está vacía.'
+      ? `${pintar(c.cian, 'Vista actual:')} [${actual.id}] ${pintar(c.negrita, actual.accion)} ` +
+        pintar(c.tenue, `(total: ${lista.longitud})`)
+      : pintar(c.amarillo, 'La lista está vacía.')
   );
 }
 
