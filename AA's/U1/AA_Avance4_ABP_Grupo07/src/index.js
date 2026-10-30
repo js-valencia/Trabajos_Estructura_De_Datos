@@ -73,6 +73,7 @@ function modoInteractivo() {
     output: process.stdout,
   });
   let siguienteId = 200;
+  let esperandoNombre = false; // true cuando se está pidiendo el nombre de una vista nueva
  
   const menu = [
     '\n=== Navegador interactivo ===',
@@ -93,6 +94,20 @@ function modoInteractivo() {
   rl.prompt();
  
   rl.on('line', (linea) => {
+        if (esperandoNombre) {
+      esperandoNombre = false;
+      const nombre = linea.trim();
+      if (nombre) {
+        historial.insertar({ id: siguienteId, accion: nombre });
+        siguienteId++;
+        ok(`Vista agregada al final (total: ${historial.longitud}).`);
+      } else {
+        error('El nombre no puede estar vacío.');
+      }
+      rl.setPrompt('> ');
+      rl.prompt();
+      return;
+    }
     switch (linea.trim().toLowerCase()) {
       case 'a':
         if (historial.avanzar() === null) console.log('Ya estás en la última vista.');
@@ -107,10 +122,9 @@ function modoInteractivo() {
         mostrarActual(historial);
         break;
       case 'n':
-        historial.insertar({ id: siguienteId, accion: `Vista nueva ${siguienteId}` });
-        siguienteId++;
-        console.log('Vista agregada al final.');
-        mostrarActual(historial);
+        console.log('Escribe el nombre de la nueva vista:');
+        esperandoNombre = true;
+        rl.setPrompt('nombre> ');
         break;
       case 'v':
         mostrarActual(historial);
