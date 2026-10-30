@@ -137,6 +137,64 @@ class ListaDobleNavegacion {
             posicion++;
         }
     }
+        irAPosicion(posicion) {
+        if (!Number.isInteger(posicion) || posicion < 1 || posicion > this.longitud) return null;
+
+        let nodo;
+        if (posicion <= this.longitud / 2) {
+            nodo = this.cabeza;
+            for (let i = 1; i < posicion; i++) nodo = nodo.siguiente;
+        } else {
+            nodo = this.cola;
+            for (let i = this.longitud; i > posicion; i--) nodo = nodo.anterior;
+        }
+
+        this.actual = nodo;
+        return nodo.dato;
+    }
+
+    buscarPorAccion(texto) {
+        const resultados = [];
+        const termino = String(texto ?? '').trim().toLowerCase();
+        if (!termino) return resultados;
+
+        this.recorrer((dato, esActual, posicion) => {
+            if (dato && String(dato.accion).toLowerCase().includes(termino)) {
+                resultados.push({ posicion, dato });
+            }
+        });
+        return resultados;
+    }
+
+    insertarDespuesDelActual(dato) {
+        if (!this.actual) return this.insertar(dato);
+
+        const nuevoNodo = new NodoDoble(dato);
+        const siguiente = this.actual.siguiente;
+
+        nuevoNodo.anterior = this.actual;
+        nuevoNodo.siguiente = siguiente;
+        this.actual.siguiente = nuevoNodo;
+
+        if (siguiente) {
+            siguiente.anterior = nuevoNodo;
+        } else {
+            this.cola = nuevoNodo;
+        }
+
+        this.longitud++;
+        return nuevoNodo;
+    }
+
+    recorrerInverso(callback) {
+        let nodo = this.cola;
+        let posicion = this.longitud;
+        while (nodo) {
+            callback(nodo.dato, nodo === this.actual, posicion);
+            nodo = nodo.anterior;
+            posicion--;
+        }
+    }
 }
 
 module.exports = ListaDobleNavegacion;
