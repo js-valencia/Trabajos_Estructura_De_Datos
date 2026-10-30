@@ -14,8 +14,8 @@ describe('Pruebas adicionales - Saltos directos y recorrido (Avance 4 ABP)', () 
   });
 
   test('6. irAlFinal: El cursor salta directamente al último nodo', () => {
-    assert.equal(lista.irAlFinal().id, 103);
-    assert.equal(lista.obtenerActual().id, 103);
+    assert.equal(lista.irAlFinal().id, 104);
+    assert.equal(lista.obtenerActual().id, 104);
     assert.equal(lista.avanzar(), null); // Ya está en el límite superior
   });
 

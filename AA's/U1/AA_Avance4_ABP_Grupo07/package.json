@@ -1,16 +1,16 @@
 {
-  "name": "abp-avance4-lista-doble",
-  "version": "1.0.0",
-  "description": "Avance 4 ABP: navegación bidireccional con lista doblemente enlazada (ListaDoble)",
-  "main": "src/index.js",
-  "scripts": {
-    "start": "node src/index.js",
-    "interactivo": "node src/index.js --interactivo",
-    "extra-tests": "node --test tests/extra.test.js",
-    "test": "node --test tests/navegacion.test.js"
-  },
-  "engines": {
-    "node": ">=18"
-  },
-  "license": "ISC"
+	"name": "abp-avance4-lista-doble",
+	"version": "1.0.0",
+	"description": "Avance 4 ABP: navegación bidireccional con lista doblemente enlazada",
+	"main": "src/index.js",
+	"scripts": {
+		"start": "node src/index.js",
+		"interactivo": "node src/index.js --interactivo",
+		"test": "node --test tests/navegacion.test.js",
+		"extra-tests": "node --test tests/navegacion.extra.test.js"
+	},
+	"engines": {
+		"node": ">=18"
+	},
+	"license": "ISC"
 }
