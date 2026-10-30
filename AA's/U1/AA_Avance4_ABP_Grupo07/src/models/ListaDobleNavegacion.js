@@ -137,6 +137,26 @@ class ListaDobleNavegacion {
             posicion++;
         }
     }
-}
 
+    // Nuevas Funcionalidades (Grupo 07)
+    // ======================================================================
+
+    /**
+     * Vacía por completo la estructura liberando de manera iterativa todos los nodos.
+     */
+    limpiarHistorial() {
+        let actual = this.cabeza;
+        while (actual) {
+            let siguiente = actual.siguiente;
+            actual.siguiente = null;
+            actual.anterior = null;
+            actual.dato = null; // Rompe referencias explicitamente para el Garbage Collector
+            actual = siguiente;
+        }
+        this.cabeza = null;
+        this.cola = null;
+        this.actual = null;
+        this.longitud = 0;
+    }
+}
 module.exports = ListaDobleNavegacion;
