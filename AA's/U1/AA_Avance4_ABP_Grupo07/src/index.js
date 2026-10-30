@@ -20,9 +20,10 @@ const error = (msg) => console.log(pintar(c.rojo, `  ✖ ${msg}`));
 // Historial de navegación del proyecto ABP
 const historial = new ListaDobleNavegacion();
  
-historial.insertar({ id: 101, accion: 'Cargar Vista A' });
-historial.insertar({ id: 102, accion: 'Filtrar Datos B' });
-historial.insertar({ id: 103, accion: 'Exportar Reporte C' });
+historial.insertar({ id: 101, accion: 'Inicio - Terminal Reina del Cisne' });
+historial.insertar({ id: 102, accion: 'Buscar ruta Loja → Cuenca' });
+historial.insertar({ id: 103, accion: 'Ver horarios Loja → Catamayo' });
+historial.insertar({ id: 104, accion: 'Comparar conexiones Loja → Zamora' });
 
 function mostrarActual(lista) {
   const actual = lista.obtenerActual();
@@ -53,9 +54,11 @@ function demostracion() {
   console.log('\n--- Avanzar ---');
   console.log(historial.avanzar());
   console.log(historial.avanzar());
+  console.log(historial.avanzar());
   console.log('Al final de la lista:', historial.avanzar());
  
   console.log('\n--- Retroceder ---');
+  console.log(historial.retroceder());
   console.log(historial.retroceder());
   console.log(historial.retroceder());
   console.log('Al inicio de la lista:', historial.retroceder());
