@@ -46,6 +46,35 @@ function mostrarLista(lista) {
     console.log(esActual ? pintar(c.verde, `  ▶ ${linea}   ◀ aquí estás`) : `    ${linea}`);
   });
 }
+function mostrarListaInversa(lista) {
+  console.log(pintar(c.negrita, '\nHistorial de navegación (orden inverso)'));
+  if (lista.longitud === 0) {
+    console.log('  (vacío)');
+    return;
+  }
+  lista.recorrerInverso((vista, esActual, posicion) => {
+    const linea = `${posicion}. [${vista.id}] ${vista.accion}`;
+    console.log(esActual ? pintar(c.verde, `  ▶ ${linea}   ◀ aquí estás`) : `    ${linea}`);
+  });
+}
+
+function demostracionNuevas() {
+  console.log('\n=== Nuevas funcionalidades ===');
+
+  console.log('\n--- Ir a una posición (irAPosicion) ---');
+  console.log('Posición 1:', historial.irAPosicion(1));
+  console.log('Posición 99 (inválida):', historial.irAPosicion(99));
+
+  console.log('\n--- Buscar por acción (buscarPorAccion) ---');
+  console.log(historial.buscarPorAccion('loja'));
+
+  console.log('\n--- Insertar después del actual (insertarDespuesDelActual) ---');
+  historial.insertarDespuesDelActual({ id: 200, accion: 'Ver tarifas Loja → Machala' });
+  mostrarLista(historial);
+
+  console.log('\n--- Recorrido inverso (recorrerInverso) ---');
+  mostrarListaInversa(historial);
+}
 
 function demostracion() {
   console.log('=== Demostración de navegación bidireccional ===\n');
@@ -80,6 +109,7 @@ function modoInteractivo() {
     siguienteId = Math.max(siguienteId, vista.id + 1);
   });
   let esperandoNombre = false; // true cuando se está pidiendo el nombre de una vista nueva
+  let pendiente = null; // 'posicion' | 'buscar' | 'insertarDespues'
  
   const menu = [
     '\n=== Navegador interactivo ===',
@@ -91,6 +121,10 @@ function modoInteractivo() {
     ' i -> ir al inicio',
     ' f -> ir al final',
     ' l -> listar todo el historial',
+    ' g -> ir a una posición concreta',
+    ' b -> buscar vistas por texto',
+    ' m -> insertar una vista después de la actual',
+    ' o -> listar el historial en orden inverso',
     ' s -> salir',
   ].join('\n');
  
@@ -100,6 +134,34 @@ function modoInteractivo() {
   rl.prompt();
  
   rl.on('line', (linea) => {
+        if (pendiente) {
+      const tipo = pendiente;
+      pendiente = null;
+      const texto = linea.trim();
+      if (tipo === 'posicion') {
+        const resultado = historial.irAPosicion(Number(texto));
+        if (resultado === null) error(`Posición inválida (usa un número entre 1 y ${historial.longitud}).`);
+        mostrarActual(historial);
+      } else if (tipo === 'buscar') {
+        const encontrados = historial.buscarPorAccion(texto);
+        if (encontrados.length === 0) {
+          aviso('Sin coincidencias.');
+        } else {
+          encontrados.forEach(({ posicion, dato }) => console.log(`  ${posicion}. [${dato.id}] ${dato.accion}`));
+        }
+      } else if (tipo === 'insertarDespues') {
+        if (texto) {
+          historial.insertarDespuesDelActual({ id: siguienteId, accion: texto });
+          siguienteId++;
+          ok(`Vista insertada después de la actual (total: ${historial.longitud}).`);
+        } else {
+          error('El nombre no puede estar vacío.');
+        }
+      }
+      rl.setPrompt('> ');
+      rl.prompt();
+      return;
+      }
         if (esperandoNombre) {
       esperandoNombre = false;
       const nombre = linea.trim();
@@ -147,6 +209,24 @@ function modoInteractivo() {
       case 'l':
         mostrarLista(historial);
         break;
+      case 'g':
+        pendiente = 'posicion';
+        rl.setPrompt(`Posición (1-${historial.longitud}): `);
+        rl.prompt();
+        return;
+      case 'b':
+        pendiente = 'buscar';
+        rl.setPrompt('Texto a buscar: ');
+        rl.prompt();
+        return;
+      case 'm':
+        pendiente = 'insertarDespues';
+        rl.setPrompt('Nombre de la vista: ');
+        rl.prompt();
+        return;
+      case 'o':
+        mostrarListaInversa(historial);
+        break;
       case 's':
         rl.close();
         return;
@@ -164,6 +244,7 @@ if (require.main === module) {
     modoInteractivo();
   } else {
     demostracion();
+    demostracionNuevas();
   }
 }
  
