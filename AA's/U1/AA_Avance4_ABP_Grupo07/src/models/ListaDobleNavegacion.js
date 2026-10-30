@@ -82,22 +82,43 @@ class ListaDobleNavegacion {
             this.cabeza = nodoAEliminar.siguiente;
         }
 
-    // Reconexión del enlace siguiente
-    if (nodoAEliminar.siguiente) {
-        nodoAEliminar.siguiente.anterior = nodoAEliminar.anterior;
-        this.actual = nodoAEliminar.siguiente;
-    } else {
-        this.cola = nodoAEliminar.anterior;
-        this.actual = nodoAEliminar.anterior;
+        // Reconexión del enlace siguiente
+        if (nodoAEliminar.siguiente) {
+            nodoAEliminar.siguiente.anterior = nodoAEliminar.anterior;
+            this.actual = nodoAEliminar.siguiente;
+        } else {
+            this.cola = nodoAEliminar.anterior;
+            this.actual = nodoAEliminar.anterior;
+        }
+
+        // Limpieza explícita de referencias (Garbage Collection Helper)
+        nodoAEliminar.siguiente = null;
+        nodoAEliminar.anterior = null;
+
+        this.longitud--;
+        return true;
+  }
+
+  /**
+   * Mueve el cursor al primer nodo usando el puntero cabeza. Complejidad: O(1)
+   * @returns {Object|null} El dato del primer nodo o null si la lista está vacía.
+   */
+  irAlInicio() {
+    if (!this.cabeza) return null;
+    this.actual = this.cabeza;
+    return this.actual.dato;
+  }
+
+    /**
+     * Mueve el cursor al último nodo usando el puntero cola. Complejidad: O(1)
+     * @returns {Object|null} El dato del último nodo o null si la lista está vacía.
+     */
+    irAlFinal() {
+        if (!this.cola) return null;
+        this.actual = this.cola;
+        return this.actual.dato;
     }
 
-    // Limpieza explícita de referencias (Garbage Collection Helper)
-    nodoAEliminar.siguiente = null;
-    nodoAEliminar.anterior = null;
-
-    this.longitud--;
-    return true;
-  }
 }
 
 module.exports = ListaDobleNavegacion;
