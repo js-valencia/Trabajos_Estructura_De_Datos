@@ -5,6 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
+    "interactivo": "node src/index.js --interactivo",
     "test": "node --test tests/navegacion.test.js"
   },
   "engines": {
