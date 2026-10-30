@@ -119,6 +119,21 @@ class ListaDobleNavegacion {
         return this.actual.dato;
     }
 
+    /**
+     * Recorre la lista de cabeza a cola sin modificarla ni imprimir nada
+     * (la presentación queda en index.js). Complejidad: O(n)
+     * @param {function(Object, boolean, number): void} callback Recibe (dato, esActual, posicion).
+     */
+    recorrer(callback) {
+        let nodo = this.cabeza;
+        let posicion = 1;
+        while (nodo) {
+            callback(nodo.dato, nodo === this.actual, posicion);
+            nodo = nodo.siguiente;
+            posicion++;
+        }
+    }
+
 }
 
 module.exports = ListaDobleNavegacion;
