@@ -34,6 +34,18 @@ function mostrarActual(lista) {
   );
 }
 
+function mostrarLista(lista) {
+  console.log(pintar(c.negrita, '\nHistorial de navegación'));
+  if (lista.longitud === 0) {
+    console.log('  (vacío)');
+    return;
+  }
+  lista.recorrer((vista, esActual, posicion) => {
+    const linea = `${posicion}. [${vista.id}] ${vista.accion}`;
+    console.log(esActual ? pintar(c.verde, `  ▶ ${linea}   ◀ aquí estás`) : `    ${linea}`);
+  });
+}
+
 function demostracion() {
   console.log('=== Demostración de navegación bidireccional ===\n');
   mostrarActual(historial);
@@ -69,6 +81,9 @@ function modoInteractivo() {
     ' e -> eliminar la vista actual',
     ' n -> agregar una nueva vista al final',
     ' v -> ver la vista actual',
+    ' i -> ir al inicio',
+    ' f -> ir al final',
+    ' l -> listar todo el historial',
     ' s -> salir',
   ].join('\n');
  
@@ -99,6 +114,17 @@ function modoInteractivo() {
         break;
       case 'v':
         mostrarActual(historial);
+        break;
+      case 'i':
+        if (historial.irAlInicio() === null) aviso('No hay vistas todavía.');
+        mostrarActual(historial);
+        break;
+      case 'f':
+        if (historial.irAlFinal() === null) aviso('No hay vistas todavía.');
+        mostrarActual(historial);
+        break;
+      case 'l':
+        mostrarLista(historial);
         break;
       case 's':
         rl.close();
