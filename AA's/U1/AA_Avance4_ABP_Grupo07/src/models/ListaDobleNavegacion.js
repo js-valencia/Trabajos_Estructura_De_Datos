@@ -137,7 +137,11 @@ class ListaDobleNavegacion {
             posicion++;
         }
     }
-        irAPosicion(posicion) {
+
+    /**
+     * Mueve el cursor a una posición específica basándose en el índice. Optimización bidireccional.
+     */
+    irAPosicion(posicion) {
         if (!Number.isInteger(posicion) || posicion < 1 || posicion > this.longitud) return null;
 
         let nodo;
@@ -153,6 +157,9 @@ class ListaDobleNavegacion {
         return nodo.dato;
     }
 
+    /**
+     * Filtra y busca elementos que contengan una cadena de texto en su propiedad acción.
+     */
     buscarPorAccion(texto) {
         const resultados = [];
         const termino = String(texto ?? '').trim().toLowerCase();
@@ -166,6 +173,9 @@ class ListaDobleNavegacion {
         return resultados;
     }
 
+    /**
+     * Inserta un elemento inmediatamente posterior a la posición actual del cursor.
+     */
     insertarDespuesDelActual(dato) {
         if (!this.actual) return this.insertar(dato);
 
@@ -186,6 +196,9 @@ class ListaDobleNavegacion {
         return nuevoNodo;
     }
 
+    /**
+     * Recorre la lista de cola a cabeza de forma inversa.
+     */
     recorrerInverso(callback) {
         let nodo = this.cola;
         let posicion = this.longitud;
@@ -195,7 +208,6 @@ class ListaDobleNavegacion {
             posicion--;
         }
     }
-}
 
     // Nuevas Funcionalidades (Grupo 07)
     // ======================================================================
@@ -209,7 +221,7 @@ class ListaDobleNavegacion {
             let siguiente = actual.siguiente;
             actual.siguiente = null;
             actual.anterior = null;
-            actual.dato = null; // Rompe referencias explicitamente para el Garbage Collector
+            actual.dato = null; // Rompe referencias explícitamente para el Garbage Collector
             actual = siguiente;
         }
         this.cabeza = null;
@@ -217,5 +229,6 @@ class ListaDobleNavegacion {
         this.actual = null;
         this.longitud = 0;
     }
-}
+} 
+
 module.exports = ListaDobleNavegacion;
