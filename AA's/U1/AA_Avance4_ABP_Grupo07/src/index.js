@@ -1,7 +1,6 @@
 const readline = require('node:readline');
 const ListaDobleNavegacion = require('./models/ListaDobleNavegacion');
 
-
 // Colores ANSI para la consola (sin librerías externas)
 const c = {
   reset: '\x1b[0m',
@@ -29,7 +28,7 @@ function mostrarActual(lista) {
   const actual = lista.obtenerActual();
   console.log(
     actual
-      ? `${pintar(c.cian, 'Vista actual:')} [${actual.id}] ${pintar(c.negrita, actual.accion)} ` +
+      ? `${pintar(c.cyan, 'Vista actual:')} [${actual.id}] ${pintar(c.negrita, actual.accion)} ` +
         pintar(c.tenue, `(total: ${lista.longitud})`)
       : pintar(c.amarillo, 'La lista está vacía.')
   );
@@ -46,6 +45,7 @@ function mostrarLista(lista) {
     console.log(esActual ? pintar(c.verde, `  ▶ ${linea}   ◀ aquí estás`) : `    ${linea}`);
   });
 }
+
 function mostrarListaInversa(lista) {
   console.log(pintar(c.negrita, '\nHistorial de navegación (orden inverso)'));
   if (lista.longitud === 0) {
@@ -74,6 +74,10 @@ function demostracionNuevas() {
 
   console.log('\n--- Recorrido inverso (recorrerInverso) ---');
   mostrarListaInversa(historial);
+
+  console.log('\n--- Vaciar por completo la estructura (limpiarHistorial) ---');
+  historial.limpiarHistorial();
+  mostrarActual(historial);
 }
 
 function demostracion() {
@@ -108,8 +112,8 @@ function modoInteractivo() {
   historial.recorrer((vista) => {
     siguienteId = Math.max(siguienteId, vista.id + 1);
   });
-  let esperandoNombre = false; // true cuando se está pidiendo el nombre de una vista nueva
-  let pendiente = null; // 'posicion' | 'buscar' | 'insertarDespues'
+  let esperandoNombre = false;
+  let pendiente = null;
  
   const menu = [
     '\n=== Navegador interactivo ===',
@@ -125,6 +129,7 @@ function modoInteractivo() {
     ' b -> buscar vistas por texto',
     ' m -> insertar una vista después de la actual',
     ' o -> listar el historial en orden inverso',
+    ' x -> vaciar el historial completo (limpiarHistorial)', 
     ' s -> salir',
   ].join('\n');
  
@@ -134,7 +139,7 @@ function modoInteractivo() {
   rl.prompt();
  
   rl.on('line', (linea) => {
-        if (pendiente) {
+    if (pendiente) {
       const tipo = pendiente;
       pendiente = null;
       const texto = linea.trim();
@@ -161,14 +166,14 @@ function modoInteractivo() {
       rl.setPrompt('> ');
       rl.prompt();
       return;
-      }
-        if (esperandoNombre) {
+    }
+    if (esperandoNombre) {
       esperandoNombre = false;
       const nombre = linea.trim();
       if (nombre) {
         historial.insertar({ id: siguienteId, accion: nombre });
         siguienteId++;
-        ok(`Vista agregada al final (total: ${historial.longitud}).`);
+        ok(`Vista agregó al final (total: ${historial.longitud}).`);
       } else {
         error('El nombre no puede estar vacío.');
       }
@@ -227,6 +232,11 @@ function modoInteractivo() {
       case 'o':
         mostrarListaInversa(historial);
         break;
+      case 'x': 
+        historial.limpiarHistorial();
+        ok('Historial vaciado por completo. Referencias y memoria liberadas.');
+        mostrarActual(historial);
+        break;
       case 's':
         rl.close();
         return;
@@ -238,7 +248,7 @@ function modoInteractivo() {
  
   rl.on('close', () => console.log('\nHasta luego.'));
 }
-// Solo se ejecuta si el archivo se corre directamente (no cuando otro módulo lo importa)
+
 if (require.main === module) {
   if (process.argv.includes('--interactivo')) {
     modoInteractivo();
@@ -247,5 +257,3 @@ if (require.main === module) {
     demostracionNuevas();
   }
 }
- 
-module.exports = historial;
