@@ -1,0 +1,104 @@
+% Fragmento para pegar dentro de su seccion (requiere amsmath, amssymb, booktabs)
+
+\subsection{Tamaño de un \texttt{Float64}}
+
+El estándar IEEE 754 (binary64) representa un número de doble precisión con
+$1$ bit de signo, $11$ bits de exponente y $52$ bits de mantisa. Como un byte
+equivale a $8$ bits:
+\[
+  \operatorname{sizeof}(\texttt{Float64})
+  = \frac{1 + 11 + 52 \text{ bits}}{8 \text{ bits/byte}}
+  = \frac{64}{8} = 8 \text{ bytes}.
+\]
+
+\subsection{Modelo de memoria de un objeto en V8}
+
+Se asume una arquitectura de 64 bits sin compresión de punteros (caso habitual
+de Node.js), con palabra $w = 8$ B. Todo objeto JavaScript comienza con una
+cabecera de tres palabras: puntero al \emph{Map} (hidden class), puntero a las
+propiedades fuera del objeto y puntero a los elementos indexados. Por tanto:
+\[
+  H = 3w = 24 \text{ B}.
+\]
+
+Sea un objeto con $n$ propiedades nombradas cuyo valor es \texttt{Float64}, y
+sea $k$ el número de ranuras \emph{in-object} que V8 reserva al crear el
+objeto. Cada propiedad ocupa una ranura de $w$ bytes; si el valor se guarda
+``en caja'' (un \texttt{HeapNumber} aparte), se suma una constante
+$c_b$ por propiedad ($c_b = 0$ si el valor va inline, $c_b = 16$ B si va en
+caja). Sea $P(n)$ la capacidad del arreglo de propiedades externas, que cumple
+$n-k \le P(n) \le \gamma\,(n-k) + \delta$ para constantes $\gamma \ge 1$ y
+$\delta \ge 0$ (holgura de crecimiento).
+
+\paragraph{Caso $n \le k$ (todo \emph{in-object}).}
+\[
+  S_{\mathrm{obj}}(n) = H + k\,w + n\,c_b = (3+k)\,w + n\,c_b .
+\]
+
+\paragraph{Caso $n > k$.} Se añade un arreglo externo con cabecera de $2w$
+(map y longitud):
+\[
+  S_{\mathrm{obj}}(n) = (3+k)\,w + 2w + P(n)\,w + n\,c_b .
+\]
+
+\paragraph{Cota superior.}
+\[
+  S_{\mathrm{obj}}(n) \le (\gamma w + c_b)\,n + (5 + k + \delta)\,w
+  = a\,n + b, \qquad a, b = \text{constantes}.
+\]
+
+\paragraph{Cota inferior.} Cada objeto debe almacenar al menos sus $n$ valores
+de $8$ B: $S_{\mathrm{obj}}(n) \ge 8n$. Luego
+$8n \le S_{\mathrm{obj}}(n) \le a\,n + b$, es decir
+\[
+  S_{\mathrm{obj}}(n) = \Theta(n).
+\]
+
+\subsection{Costo de la hidden class (Map)}
+
+Los objetos con la misma forma comparten un único Map. El \emph{descriptor
+array} guarda una entrada por propiedad (clave, detalles y ubicación), es
+decir, $3w$ B por propiedad. Como los Maps de la cadena de transiciones
+comparten ese arreglo de descriptores y cada Map tiene tamaño constante
+$M_0$:
+\[
+  M(n) = n\,M_0 + 3w\,n = \Theta(n).
+\]
+
+\subsection{Espacio asintótico total}
+
+Para $m$ objetos con la misma forma y $n$ propiedades \texttt{Float64}:
+\[
+  S_{\mathrm{total}}(m,n) = m\,S_{\mathrm{obj}}(n) + M(n)
+  = \Theta(mn) + \Theta(n) = \Theta(mn),
+\]
+porque el Map se amortiza entre los $m$ objetos y $n \le mn$ para $m \ge 1$.
+
+\subsection{Comparación con un arreglo de \texttt{Float64}}
+
+Un arreglo con elementos de tipo \texttt{PACKED\_DOUBLE\_ELEMENTS} (o un
+\texttt{Float64Array}) almacena los valores contiguos, con una cabecera
+constante de $2w = 16$ B:
+\[
+  S_{\mathrm{arr}}(N) = 8N + 16 = \Theta(N), \qquad N = mn .
+\]
+Ambas estructuras son $\Theta(mn)$, pero la constante cambia:
+\[
+  \frac{S_{\mathrm{obj}}(n)}{8n} \longrightarrow \frac{\gamma w + c_b}{8}
+  \quad (n \to \infty), \qquad
+  \frac{S_{\mathrm{arr}}(N)}{8N} \longrightarrow 1 .
+\]
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Caso ($m = 10^6$, $n = 3$) & Fórmula & Tamaño aprox. \\
+\midrule
+Objetos $\{x,y,z\}$, $c_b = 0$  & $m\,(3+k)w$ con $k=3$ & $48$ MB \\
+Objetos $\{x,y,z\}$, $c_b = 16$ & $m\,[(3+k)w + 3c_b]$ & $96$ MB \\
+\texttt{Float64Array}$(mn)$     & $8mn + 16$            & $24$ MB \\
+\bottomrule
+\end{tabular}
+\caption{Estimación teórica para $10^6$ puntos con tres coordenadas.}
+\end{table}
