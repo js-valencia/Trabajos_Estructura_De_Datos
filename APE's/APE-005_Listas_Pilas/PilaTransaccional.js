@@ -1,38 +1,45 @@
 const { ListaDoblementeEnlazada } = require('./ListaDoble');
 
 /**
- * Pila (Stack) orientada a Sostenibilidad Computacional.
- * Operaciones fundamentales Push y Pop en O(1) estricto.
+ * Pila (Stack) orientada a Sostenibilidad Computacional y Programación Funcional.
+ * Operaciones fundamentales Push y Pop en O(1) estricto de forma inmutable.
  */
-class PilaTransaccional {
-  constructor() {
-    this.lista = new ListaDoblementeEnlazada();
-  }
+const PilaTransaccional = {
+  /**
+   * Crea un estado inicial de la pila.
+   */
+  crear: () => Object.freeze({
+    lista: ListaDoblementeEnlazada.crear()
+  }),
 
   /**
    * Apila un comando de telemetría en el tope.
    * Complejidad Temporal: O(1)
+   * @returns {Object} Nuevo estado de la pila
    */
-  push(comando) {
-    this.lista.insertarFinal(comando);
-  }
+  push: (estadoPila, comando) => Object.freeze({
+    lista: ListaDoblementeEnlazada.insertarFinal(estadoPila.lista, comando)
+  }),
 
   /**
-   * Desapila y retorna el comando en el tope (Undo).
+   * Desapila el comando en el tope (Undo).
    * Complejidad Temporal: O(1)
+   * @returns {{ estado: Object, datos: any }} Nuevo estado y el dato desapilado
    */
-  pop() {
-    return this.lista.eliminarFinal();
-  }
+  pop: (estadoPila) => {
+    const { estado: nuevaLista, datos } = ListaDoblementeEnlazada.eliminarFinal(estadoPila.lista);
+    return {
+      estado: Object.freeze({ lista: nuevaLista }),
+      datos
+    };
+  },
 
   /**
    * Retorna la cantidad de elementos almacenados.
    */
-  obtenerTamano() {
-    return this.lista.longitud;
-  }
-}
+  obtenerTamano: (estadoPila) => estadoPila.lista.longitud
+};
 
-// Exporta la clase de las dos formas para que funcione con cualquier tipo de require
+// Exportación compatible
 module.exports = PilaTransaccional;
 module.exports.PilaTransaccional = PilaTransaccional;

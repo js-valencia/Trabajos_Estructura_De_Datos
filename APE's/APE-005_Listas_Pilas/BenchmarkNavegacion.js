@@ -1,67 +1,79 @@
 const PilaTransaccional = require('./PilaTransaccional');
 
-function obtenerMemoriaMB() {
-  return (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
-}
+// 1. Funciones de utilidad
+const bytesAMB = (bytes) => (bytes / 1024 / 1024).toFixed(2);
+const obtenerHeapUsed = () => process.memoryUsage().heapUsed;
+const forEachN = (n, fn) => { for (let i = 0; i < n; i++) fn(i); };
 
-// [CAMBIO] N se puede pasar por consola: node --expose-gc BenchmarkNavegacion.js 50000
+// 2. Ejecutor de benchmark de orden superior
+const medirRendimiento = (etiqueta, fnInsertar, fnEliminar, n) => {
+  if (global.gc) global.gc();
+
+  const memInicial = obtenerHeapUsed();
+
+  console.time(etiqueta);
+  const estructura = fnInsertar(n);
+  const memPico = obtenerHeapUsed();
+
+  fnEliminar(estructura, n);
+  console.timeEnd(etiqueta);
+
+  const memFinal = obtenerHeapUsed();
+
+  return {
+    picoMB: bytesAMB(memPico - memInicial),
+    deltaMB: bytesAMB(memFinal - memInicial)
+  };
+};
+
+// 3. Estrategias de prueba
+const estrategias = [
+  {
+    nombre: 'Tiempo Array Nativo (unshift/shift)',
+    insertar: (n) => {
+      const arr = [];
+      forEachN(n, (i) => arr.unshift({ id: i, log: 'Evento Satelital' }));
+      return arr;
+    },
+    eliminar: (arr, n) => forEachN(n, () => arr.shift()),
+    imprimirResultados: (picoMB, deltaMB) => {
+      console.log(`Heap con datos cargados (Array): ${picoMB} MB`);
+      console.log(`Impacto de Memoria Heap Array: ${deltaMB} MB\n`);
+    }
+  },
+  {
+    nombre: 'Tiempo Pila Transaccional O(1)',
+    insertar: (n) => {
+      const pila = new PilaTransaccional();
+      forEachN(n, (i) => pila.push({ id: i, log: 'Evento Satelital' }));
+      return pila;
+    },
+    eliminar: (pila, n) => forEachN(n, () => pila.pop()),
+    imprimirResultados: (picoMB, deltaMB) => {
+      console.log(`Heap con datos cargados (Pila): ${picoMB} MB`);
+      console.log(`Impacto de Memoria Heap Pila: ${deltaMB} MB\n`);
+    }
+  },
+  {
+    nombre: 'Tiempo Array Nativo (push/pop)',
+    insertar: (n) => {
+      const arr = [];
+      forEachN(n, (i) => arr.push({ id: i, log: 'Evento Satelital' }));
+      return arr;
+    },
+    eliminar: (arr, n) => forEachN(n, () => arr.pop()),
+    imprimirResultados: (picoMB) => {
+      console.log(`Heap con datos cargados (Array push/pop): ${picoMB} MB\n`);
+    }
+  }
+];
+
+// 4. Orquestación principal
 const N = Number(process.argv[2]) || 500000;
 
 console.log(`=== BENCHMARK DE RENDIMIENTO (N = ${N}) ===\n`);
 
-// 1. EVALUACIÓN CON ARREGLO TRADICIONAL (unshift / shift)
-if (global.gc) global.gc();
-const memInicialArray = process.memoryUsage().heapUsed;
-
-console.time('Tiempo Array Nativo (unshift/shift)');
-const arregloNativo = [];
-for (let i = 0; i < N; i++) {
-  arregloNativo.unshift({ id: i, log: 'Evento Satelital' }); // O(n)
-}
-const memPicoArray = process.memoryUsage().heapUsed; // [AGREGADO] heap con todos los datos cargados
-for (let i = 0; i < N; i++) {
-  arregloNativo.shift(); // O(n)
-}
-console.timeEnd('Tiempo Array Nativo (unshift/shift)');
-
-const memFinalArray = process.memoryUsage().heapUsed;
-const deltaMemArray = ((memFinalArray - memInicialArray) / 1024 / 1024).toFixed(2);
-console.log(`Heap con datos cargados (Array): ${((memPicoArray - memInicialArray) / 1024 / 1024).toFixed(2)} MB`);
-console.log(`Impacto de Memoria Heap Array: ${deltaMemArray} MB\n`);
-
-// 2. EVALUACIÓN CON PILA DE PUNTEROS DINÁMICOS
-if (global.gc) global.gc();
-const memInicialPila = process.memoryUsage().heapUsed;
-
-console.time('Tiempo Pila Transaccional O(1)');
-const pilaSatelital = new PilaTransaccional();
-for (let i = 0; i < N; i++) {
-  pilaSatelital.push({ id: i, log: 'Evento Satelital' }); // O(1)
-}
-const memPicoPila = process.memoryUsage().heapUsed; // [AGREGADO]
-for (let i = 0; i < N; i++) {
-  pilaSatelital.pop(); // O(1)
-}
-console.timeEnd('Tiempo Pila Transaccional O(1)');
-
-const memFinalPila = process.memoryUsage().heapUsed;
-const deltaMemPila = ((memFinalPila - memInicialPila) / 1024 / 1024).toFixed(2);
-console.log(`Heap con datos cargados (Pila): ${((memPicoPila - memInicialPila) / 1024 / 1024).toFixed(2)} MB`);
-console.log(`Impacto de Memoria Heap Pila: ${deltaMemPila} MB\n`);
-
-// 3. [AGREGADO] CONTROL JUSTO: Array nativo usado como pila real (push / pop al final)
-if (global.gc) global.gc();
-const memInicialArrayLIFO = process.memoryUsage().heapUsed;
-
-console.time('Tiempo Array Nativo (push/pop)');
-const arregloLIFO = [];
-for (let i = 0; i < N; i++) {
-  arregloLIFO.push({ id: i, log: 'Evento Satelital' }); // O(1) amortizado
-}
-const memPicoArrayLIFO = process.memoryUsage().heapUsed;
-for (let i = 0; i < N; i++) {
-  arregloLIFO.pop(); // O(1)
-}
-console.timeEnd('Tiempo Array Nativo (push/pop)');
-
-console.log(`Heap con datos cargados (Array push/pop): ${((memPicoArrayLIFO - memInicialArrayLIFO) / 1024 / 1024).toFixed(2)} MB\n`);
+estrategias.forEach(({ nombre, insertar, eliminar, imprimirResultados }) => {
+  const { picoMB, deltaMB } = medirRendimiento(nombre, insertar, eliminar, N);
+  imprimirResultados(picoMB, deltaMB);
+});
