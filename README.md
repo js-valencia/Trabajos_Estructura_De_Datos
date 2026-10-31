@@ -93,7 +93,7 @@ Pilar Naranjo,
 Alison Tapia,
 José Valencia
 
-**Asignatura:** Estructura de Datos  
+**Asignatura:** Estructura de Datos 
 
 **Institución:** Universidad Nacional de Loja (UNL)
 
