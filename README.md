@@ -40,15 +40,21 @@ Trabajos_Estructura_De_Datos/
 │
 ├── AA's/
 │   └── U1/
-│       └── AA-03/
+│       ├── AA-03/
+│       └── AA_Avance4_ABP_Grupo07/
+│           └── docs/
 │
 ├── APE's/
-│   └── APE-03/
+│   ├── APE-01/
+│   ├── APE-03/
+│   ├── APE-04/
+│   ├── APE-05/
+│   └── APE_006_Pila_Transaccional␠/
 │
 └── README.md
 ```
 
-> **Nota:** El árbol representa las carpetas identificadas actualmente en el repositorio. Se actualizará conforme se incorporen nuevas actividades y unidades.
+> **Nota:** `␠` representa un espacio al final del nombre actual de la carpeta `APE_006_Pila_Transaccional`.
 
 ## 🗂️ Organización de los trabajos
 
@@ -57,7 +63,8 @@ Trabajos_Estructura_De_Datos/
 Carpeta destinada a las actividades de aprendizaje desarrolladas durante la asignatura.
 
 - **U1:** Actividades correspondientes a la Unidad 1.
-- **AA-03:** Carpeta de la actividad identificada con el número 03.
+- **AA-03:** Ejercicios sobre fugas de memoria y su solución.
+- **AA_Avance4_ABP_Grupo07:** Avance del ABP con documentación en `docs/`.
 
 📁 [Explorar actividades de aprendizaje](./AA's/)
 
@@ -65,7 +72,11 @@ Carpeta destinada a las actividades de aprendizaje desarrolladas durante la asig
 
 Carpeta destinada a las actividades prácticas y experimentales.
 
-- **APE-03:** Carpeta correspondiente a la actividad práctica identificada con el número 03.
+- **APE-01:** Ejercicios sobre tipos primitivos.
+- **APE-03:** Ejercicios de gestión de memoria y recolección de basura.
+- **APE-04:** Lista enlazada simple y benchmark.
+- **APE-05:** Lista doble, pila transaccional y benchmark de navegación.
+- **APE_006_Pila_Transaccional:** Pila transaccional, gestor de ordenamiento y benchmark estadístico. El nombre real de esta carpeta termina con un espacio.
 
 📁 [Explorar actividades prácticas](./APE's/)
 
