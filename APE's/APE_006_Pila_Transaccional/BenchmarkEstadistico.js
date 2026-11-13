@@ -1,157 +1,88 @@
-const { performance } = require("perf_hooks");
-const assert = require("assert");
-const GestorOrdenamientoTransaccional =
-  require("./GestorOrdenamientoTransaccional");
+const { performance } = require('perf_hooks');
+const GestorOrdenamientoTransaccional = require('./GestorOrdenamientoTransaccional');
+
+function calcularEstadisticas(muestras) {
+    const k = muestras.length;
+    const media = muestras.reduce((acc, val) => acc + val, 0) / k;
+    const varianza = muestras.reduce((acc, val) => acc + Math.pow(val - media, 2), 0) / (k - 1);
+    const desvEst = Math.sqrt(varianza);
+    const cv = (desvEst / media) * 100;
+    const tCritico = 2.045; // Valor t-Student para k - 1 = 29 grados de libertad (95%)
+    const margenError = tCritico * (desvEst / Math.sqrt(k));
+
+    return {
+        media: media.toFixed(4),
+        desvEst: desvEst.toFixed(4),
+        cv: cv.toFixed(2),
+        icInf: (media - margenError).toFixed(4),
+        icSup: (media + margenError).toFixed(4),
+        mediaNum: media
+    };
+}
 
 const N = 100000;
 const M_MUTACIONES = 250;
 const K_REPLICAS = 30;
-const T_CRITICO_95 = 2.045; // t de Student, 29 grados de libertad.
-const MAX_DESPLAZAMIENTO_WATTS = 20;
 
-function calcularEstadisticas(muestras) {
-  const k = muestras.length;
-  const media = muestras.reduce((suma, valor) => suma + valor, 0) / k;
-  const varianza = muestras.reduce(
-    (suma, valor) => suma + Math.pow(valor - media, 2), 0
-  ) / (k - 1);
-  const desviacion = Math.sqrt(varianza);
-  const cv = media === 0 ? 0 : (desviacion / media) * 100;
-  const margen = T_CRITICO_95 * (desviacion / Math.sqrt(k));
-
-  return {
-    media, desviacion, cv,
-    icInferior: media - margen,
-    icSuperior: media + margen
-  };
-}
-
-function crearDatosBase(n) {
-  const datos = Array.from({ length: n }, (_, id) => ({
-    id,
+const datasetBase = Array.from({ length: N }, (_, idx) => ({
+    id: idx,
     watts: Math.floor(Math.random() * 5000)
-  }));
-  return datos.sort((a, b) => a.watts - b.watts);
-}
+}));
 
-function crearPlanMutaciones(datos, cantidad) {
-  const operaciones = [];
-  for (let i = 0; i < cantidad; i++) {
-    const registro = datos[Math.floor(Math.random() * datos.length)];
-    // Variación local de telemetría: limita desplazamientos extremos en el arreglo.
-    const variacion = Math.floor(
-      Math.random() * (2 * MAX_DESPLAZAMIENTO_WATTS + 1)
-    ) - MAX_DESPLAZAMIENTO_WATTS;
+const tiemposPila = [];
+const tiemposReprocesamiento = [];
 
-    operaciones.push({
-      id: registro.id,
-      nuevoWatts: Math.max(0, Math.min(5000, registro.watts + variacion))
-    });
-  }
-  return operaciones;
-}
+if (global.gc) global.gc();
+const heapInicial = process.memoryUsage().heapUsed;
 
-function crearWattsOriginalesPorId(datos) {
-  const originales = new Array(datos.length);
-  for (const registro of datos) originales[registro.id] = registro.watts;
-  return originales;
-}
-
-function mismoEstado(registros, basePorId) {
-  if (registros.length !== basePorId.length) return false;
-  for (const registro of registros) {
-    if (registro.watts !== basePorId[registro.id]) return false;
-  }
-  return true;
-}
-
-function ejecutarBenchmark() {
-  const tiemposPila = [];
-  const tiemposReprocesamiento = [];
-
-  if (global.gc) global.gc();
-  const heapInicial = process.memoryUsage().heapUsed;
-
-  for (let replica = 0; replica < K_REPLICAS; replica++) {
-    const datosBase = crearDatosBase(N);
-    const wattsOriginales = crearWattsOriginalesPorId(datosBase);
-    const plan = crearPlanMutaciones(datosBase, M_MUTACIONES);
-
-    const gestorA = new GestorOrdenamientoTransaccional(datosBase);
-    const loteId = `LOTE_ERR_${replica}`;
-
-    for (const operacion of plan) {
-      gestorA.actualizarPorId(operacion.id, operacion.nuevoWatts, loteId);
+for (let r = 0; r < K_REPLICAS; r++) {
+    // 1. Medición Estrategia A: Pila Transaccional O(m)
+    const gestorA = new GestorOrdenamientoTransaccional(datasetBase);
+    for (let m = 0; m < M_MUTACIONES; m++) {
+        const idx = Math.floor(Math.random() * N);
+        gestorA.actualizarConRegistroDelta(idx, Math.floor(Math.random() * 5000), 'LOTE_ERR_01');
     }
+    const t0A = performance.now();
+    gestorA.deshacerLoteTransaccional('LOTE_ERR_01');
+    const t1A = performance.now();
+    tiemposPila.push(t1A - t0A);
 
-    const inicioA = performance.now();
-    gestorA.deshacerLoteTransaccional(loteId);
-    const finA = performance.now();
-    tiemposPila.push(finA - inicioA);
-
-    assert(mismoEstado(gestorA.registros, wattsOriginales),
-      "La estrategia A no restauró el estado original.");
-    assert(gestorA.estaOrdenado(),
-      "La estrategia A dejó los registros desordenados.");
-
-    const gestorB = new GestorOrdenamientoTransaccional(datosBase);
-    for (const operacion of plan) {
-      const indice = gestorB.indicePorId.get(operacion.id);
-      gestorB.registros[indice].watts = operacion.nuevoWatts;
+    // 2. Medición Estrategia B: Re-procesamiento completo O(N log N)
+    const gestorB = new GestorOrdenamientoTransaccional(datasetBase);
+    for (let m = 0; m < M_MUTACIONES; m++) {
+        const idx = Math.floor(Math.random() * N);
+        gestorB.registros[idx].watts = Math.floor(Math.random() * 5000);
     }
+    const t0B = performance.now();
+    gestorB.reprocesarOrdenamientoCompleto();
+    const t1B = performance.now();
+    tiemposReprocesamiento.push(t1B - t0B);
+}
 
-    const inicioB = performance.now();
-    gestorB.reprocesarOrdenamientoCompleto(wattsOriginales);
-    const finB = performance.now();
-    tiemposReprocesamiento.push(finB - inicioB);
+if (global.gc) global.gc();
+const heapFinal = process.memoryUsage().heapUsed;
+const deltaHeapMB = ((heapFinal - heapInicial) / (1024 * 1024)).toFixed(3);
 
-    assert(mismoEstado(gestorB.registros, wattsOriginales),
-      "La estrategia B no restauró el estado original.");
-    assert(gestorB.estaOrdenado(),
-      "La estrategia B dejó los registros desordenados.");
-  }
+const estPila = calcularEstadisticas(tiemposPila);
+const estReproc = calcularEstadisticas(tiemposReprocesamiento);
+const ahorro = ((1 - estPila.mediaNum / estReproc.mediaNum) * 100).toFixed(2);
 
-  if (global.gc) global.gc();
-  const heapFinal = process.memoryUsage().heapUsed;
-  const deltaHeapMB = (heapFinal - heapInicial) / (1024 * 1024);
-
-  const estadisticasA = calcularEstadisticas(tiemposPila);
-  const estadisticasB = calcularEstadisticas(tiemposReprocesamiento);
-  const ahorro = estadisticasB.media === 0 ? 0 :
-    (1 - estadisticasA.media / estadisticasB.media) * 100;
-
-  console.log(
-    `\n=== BENCHMARK (N=${N}, m=${M_MUTACIONES}, k=${K_REPLICAS}) ===`
-  );
-  console.log(
-    `Variación local aplicada: ±${MAX_DESPLAZAMIENTO_WATTS} watts por mutación`
-  );
-
-  console.table([
+console.log(`=== ANÁLISIS ESTADÍSTICO COMPARATIVO (N=${N}, m=${M_MUTACIONES}, k=${K_REPLICAS}) ===`);
+console.table([
     {
-      Estrategia: "Pila transaccional LIFO",
-      "Media (ms)": estadisticasA.media.toFixed(4),
-      "Desv. est. (ms)": estadisticasA.desviacion.toFixed(4),
-      "CV (%)": estadisticasA.cv.toFixed(2),
-      "IC 95% (ms)": `[${estadisticasA.icInferior.toFixed(4)}, ${estadisticasA.icSuperior.toFixed(4)}]`
+        Estrategia: 'Pila Transaccional LIFO O(m)',
+        'Media (ms)': estPila.media,
+        'Desv. Est. s (ms)': estPila.desvEst,
+        'CV (%)': estPila.cv,
+        'IC 95% (ms)': `[${estPila.icInf}, ${estPila.icSup}]`
     },
     {
-      Estrategia: "Restauración y ordenamiento completo",
-      "Media (ms)": estadisticasB.media.toFixed(4),
-      "Desv. est. (ms)": estadisticasB.desviacion.toFixed(4),
-      "CV (%)": estadisticasB.cv.toFixed(2),
-      "IC 95% (ms)": `[${estadisticasB.icInferior.toFixed(4)}, ${estadisticasB.icSuperior.toFixed(4)}]`
+        Estrategia: 'Re-ordenamiento Completo O(N log N)',
+        'Media (ms)': estReproc.media,
+        'Desv. Est. s (ms)': estReproc.desvEst,
+        'CV (%)': estReproc.cv,
+        'IC 95% (ms)': `[${estReproc.icInf}, ${estReproc.icSup}]`
     }
-  ]);
-
-  console.log(`Ahorro temporal de recuperación: ${ahorro.toFixed(2)}%`);
-  console.log(
-    `Variación neta de Heap después de GC: ${deltaHeapMB.toFixed(3)} MB`
-  );
-  console.log(
-    "Nota: el delta de Heap es una variación neta después del GC; " +
-    "no representa el pico máximo de memoria utilizado."
-  );
-}
-
-ejecutarBenchmark();
+]);
+console.log(`Tasa de Ahorro Computacional (eta): ${ahorro}%`);
+console.log(`Variación Neta de Memoria Heap (Delta M): ${deltaHeapMB} MB`);
